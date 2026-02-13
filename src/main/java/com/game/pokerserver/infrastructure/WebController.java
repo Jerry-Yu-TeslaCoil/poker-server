@@ -2,6 +2,7 @@ package com.game.pokerserver.infrastructure;
 
 import com.game.pokerserver.util.DataJsonUtil;
 import control.player.controller.PlayerController;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -16,6 +17,7 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 public class WebController implements PlayerController {
 
+    @Setter
     private WebSocketSession session;
 
     private final CompletableFuture<String> messageFuture = new CompletableFuture<>();
@@ -52,4 +54,5 @@ public class WebController implements PlayerController {
     public void getWebMessage(String message) {
         messageFuture.complete(message);
     }
+
 }
