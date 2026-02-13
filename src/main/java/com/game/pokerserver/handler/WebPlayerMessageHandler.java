@@ -84,6 +84,7 @@ public class WebPlayerMessageHandler implements WebSocketHandler {
             //TODO: Call game service to shutdown player or give a default action.
             log.info("Connection {} closed", correspondPlayer
                     .playerIdentifier().getPlayerPersonalVO().getInfo().playerId());
+            idToSession.remove(correspondPlayer.playerIdentifier().getPlayerPersonalVO().getInfo().playerId());
             sessionToPlayer.remove(session);
         }
     }

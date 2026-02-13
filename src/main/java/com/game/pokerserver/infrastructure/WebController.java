@@ -3,6 +3,7 @@ package com.game.pokerserver.infrastructure;
 import com.game.pokerserver.util.DataJsonUtil;
 import control.player.controller.PlayerController;
 import lombok.Setter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -23,6 +24,10 @@ public class WebController implements PlayerController {
     private final CompletableFuture<String> messageFuture = new CompletableFuture<>();
 
     public WebController() {
+    }
+
+    public void getWebMessage(String message) {
+        messageFuture.complete(message);
     }
 
     @Override
@@ -51,8 +56,8 @@ public class WebController implements PlayerController {
         return DataJsonUtil.convertToPlayerDecision(message);
     }
 
-    public void getWebMessage(String message) {
-        messageFuture.complete(message);
+    @Override
+    public String toString() {
+        return "WebController";
     }
-
 }
