@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh">
+<meta charset="UTF-8">
+<head>
+    <title>WebSocket 测试</title>
+</head>
+<body>
+<h2>WebSocket 聊天室</h2>
+
+<div>
+    <button onclick="connect()">连接</button>
+    <button onclick="disconnect()">断开</button>
+</div>
+
+<div>
+    <input type="text" id="messageInput" placeholder="输入消息">
+    <button onclick="sendMessage()">发送</button>
+</div>
+
+<div id="messageArea" style="border:1px solid #ccc; height:300px; overflow-y:auto;">
+    <!-- 消息显示在这里 -->
+</div>
+
+<script>
+    let socket = null;
+
+    const token = '[[${jwtToken}]]';
+
+    // 1. 连接服务器
+    function connect() {
+        // 创建 WebSocket 连接
+        // ws://localhost:8080/ws 是连接地址
+        socket = new WebSocket('ws://localhost:8080/ws');
+
+        // 连接成功时
+        socket.onopen = function(event) {
+            addMessage("系统: 连接成功！");
+            socket.send(token);
+        };
+
+        // 收到消息时
+        socket.onmessage = function(event) {
+            addMessage("服务器: " + event.data);
+        };
+
+        // 连接关闭时
+        socket.onclose = function(event) {
+            addMessage("系统: 连接断开");
+        };
+
+        // 发生错误时
+        socket.onerror = function(event) {
+            addMessage("系统: 发生错误");
+        };
+    }
+
+    // 2. 发送消息
+    function sendMessage() {
+        if (!socket || socket.readyState !== WebSocket.OPEN) {
+            alert("请先连接！");
+            return;
+        }
+
+        const input = document.getElementById('messageInput');
+        const message = input.value;
+
+        if (message) {
+            socket.send(message);
+            addMessage("我: " + message);
+            input.value = '';
+        }
+    }
+
+    // 3. 断开连接
+    function disconnect() {
+        if (socket) {
+            socket.close();
+        }
+    }
+
+    // 4. 显示消息
+    function addMessage(message) {
+        const area = document.getElementById('messageArea');
+        const div = document.createElement('div');
+        div.textContent = message;
+        area.appendChild(div);
+        area.scrollTop = area.scrollHeight;
+    }
+
+    // 页面加载时自动连接（可选）
+    window.onload = function() {
+        connect();
+    };
+</script>
+</body>
+</html>

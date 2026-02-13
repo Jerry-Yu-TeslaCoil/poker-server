@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: "poker-server"
+jwt:
+  secret: ${JWT_SECRET:cEfECf83437DB46f4aA232af48Aa4E23DcC489C1E248C276866F6E00832Dd66A}
+  expiration: ${JWT_EXPIRATION:86400000}
+  issuer: ${JWT_ISSUER:poker-server}
