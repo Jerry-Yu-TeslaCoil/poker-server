@@ -1,6 +1,8 @@
 package com.game.pokerserver.handler;
 
 import com.game.pokerserver.infrastructure.WebGamePlayer;
+import com.game.pokerserver.service.GamingService;
+import com.game.pokerserver.util.DataJsonUtil;
 import com.game.pokerserver.util.JwtUtil;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -15,11 +17,14 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class WebPlayerMessageHandler implements WebSocketHandler {
 
-    JwtUtil jwtUtil;
+    private final JwtUtil jwtUtil;
+
+    private final GamingService gamingService;
 
     @Autowired
-    public WebPlayerMessageHandler(JwtUtil jwtUtil) {
+    public WebPlayerMessageHandler(JwtUtil jwtUtil, GamingService gamingService) {
         this.jwtUtil = jwtUtil;
+        this.gamingService = gamingService;
     }
 
     private final ConcurrentHashMap<String, WebSocketSession> idToSession = new ConcurrentHashMap<>();
@@ -59,17 +64,20 @@ public class WebPlayerMessageHandler implements WebSocketHandler {
         WebSocketSession playerSession = idToSession.getOrDefault(playerId, null);
         if (playerSession != null) {
             log.warn("Player {} already registered", playerId);
-            session.sendMessage(new TextMessage("Player already registered."));
+            session.sendMessage(new TextMessage(DataJsonUtil.convertToJson("WARNING", "玩家已经连接")));
             session.close();
         }
         WebGamePlayer correspondPlayer = registeringMap.get(playerId);
         if (correspondPlayer == null) {
             throw new RuntimeException("No player with id " + playerId + " found");
         } else {
-            correspondPlayer.playerController().setSession(playerSession);
+            correspondPlayer.playerController().setSession(session);
             idToSession.put(playerId, session);
             sessionToPlayer.put(session, correspondPlayer);
         }
+        int playerPos = gamingService.play(correspondPlayer);
+        session.sendMessage(new TextMessage(
+                DataJsonUtil.convertToJson("PLAYER_POS",  playerPos)));
     }
 
     @Override

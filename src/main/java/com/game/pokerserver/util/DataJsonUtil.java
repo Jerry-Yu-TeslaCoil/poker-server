@@ -32,7 +32,7 @@ public class DataJsonUtil {
         return convertToJson("DECISION_REQUEST", decisionRequest);
     }
 
-    private static String convertToJson(String messageType, Object message) {
+    public static String convertToJson(String messageType, Object message) {
         try {
             DataVO dataVO = new DataVO(messageType, message);
 
@@ -72,3 +72,7 @@ public class DataJsonUtil {
         }
     }
 }
+
+/*
+{"dataType":"PLAYER_DECISION","data":{"decision":"CALL","amount":"0"}}
+ */

@@ -45,6 +45,8 @@ public class GameController {
         log.info("Handling game player {}", gamePlayer);
         String jwt = messageHandler.registerPlayer(gamePlayer);
         model.addAttribute("jwtToken", jwt);
+        model.addAttribute("playerId", gamePlayer.playerIdentifier()
+                .getPlayerPersonalVO().getInfo().playerId());
         return "game";
     }
 }

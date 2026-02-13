@@ -1,96 +1,714 @@
 <!DOCTYPE html>
-<html lang="zh">
-<meta charset="UTF-8">
+<html lang="en">
 <head>
-    <title>WebSocket 测试</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>德州扑克·简易对局终端</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+        body {
+            background: linear-gradient(145deg, #1a4d2a 0%, #0f3b1a 100%);
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .poker-table {
+            max-width: 1100px;
+            width: 100%;
+            background: #2e7d5e;
+            background-image: radial-gradient(circle at 30% 40%, #3b9e7a, #1e5a45);
+            border-radius: 200px 200px 140px 140px;
+            box-shadow: 0 30px 30px rgba(0,0,0,0.6), inset 0 -5px 0 rgba(0,0,0,0.3), inset 0 5px 15px rgba(255,255,200,0.2);
+            padding: 40px 30px;
+            border: 8px solid #b68b5c;
+            position: relative;
+        }
+        .felt {
+            background: #0a3f2b;
+            background-image: repeating-linear-gradient(45deg, rgba(0,0,0,0.05) 0px, rgba(0,0,0,0.05) 2px, transparent 2px, transparent 10px);
+            border-radius: 180px 180px 120px 120px;
+            padding: 30px 25px;
+            border: 2px solid #dbb42c;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.7);
+        }
+
+        /* 公共牌区 */
+        .board-cards {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+        .card-slot {
+            width: 80px;
+            height: 110px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            border: 2px solid #f5e7c8;
+            box-shadow: 0 8px 0 #5f3f1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 28px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 0 black;
+        }
+        .card {
+            width: 80px;
+            height: 110px;
+            background: white;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 10px 6px;
+            box-shadow: 0 8px 0 #6b4a2c, 0 2px 5px rgba(0,0,0,0.5);
+            font-weight: 700;
+            position: relative;
+        }
+        .card.red {
+            color: #c41e3a;
+        }
+        .card.black {
+            color: #111;
+        }
+        .card .top-left {
+            align-self: flex-start;
+            font-size: 22px;
+            line-height: 1;
+        }
+        .card .bottom-right {
+            align-self: flex-end;
+            font-size: 22px;
+            transform: rotate(180deg);
+            line-height: 1;
+        }
+        .card .suit-big {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 40px;
+            opacity: 0.25;
+        }
+
+        /* 玩家区域 */
+        .players-row {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .player-spot {
+            background: #0f2e22;
+            border-radius: 30px 30px 20px 20px;
+            padding: 20px 15px 15px;
+            box-shadow: inset 0 -5px 0 #0a1f17, 0 10px 15px black;
+            flex: 1 1 260px;
+            border: 2px solid #d4af37;
+            color: #ffefc0;
+        }
+        .player-spot.active-turn {
+            border: 4px solid #ffd966;
+            box-shadow: 0 0 20px #ffbf00;
+            background: #1a4735;
+        }
+        .hole-cards {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 15px 0 10px;
+        }
+        .hole-card {
+            width: 60px;
+            height: 85px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 26px;
+            box-shadow: 0 5px 0 #2b1e0e;
+        }
+        .hole-card.back {
+            background: #2a4a6e;
+            color: white;
+            font-size: 20px;
+        }
+        .chips-info {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 16px;
+            background: #0a191f;
+            padding: 8px 12px;
+            border-radius: 40px;
+            border: 1px solid #9f8c5c;
+        }
+
+        /* 决策面板 */
+        .action-panel {
+            margin-top: 35px;
+            background: #1d3b2b;
+            border-radius: 60px;
+            padding: 25px 25px;
+            border: 2px solid #e6c873;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            box-shadow: inset 0 2px 5px #b9b06e, 0 5px 0 #4a3721;
+        }
+        .action-btn {
+            background: #f5e7a7;
+            border: none;
+            border-radius: 40px;
+            padding: 14px 28px;
+            font-size: 22px;
+            font-weight: bold;
+            color: #1e3a1e;
+            border-bottom: 6px solid #aa8c54;
+            cursor: pointer;
+            transition: 0.07s;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            box-shadow: 0 3px 5px black;
+        }
+        .action-btn:active {
+            border-bottom-width: 2px;
+            transform: translateY(4px);
+            background: #ffe68f;
+        }
+        .action-btn:disabled {
+            opacity: 0.4;
+            border-bottom-width: 6px;
+            transform: none;
+            pointer-events: none;
+        }
+        .raise-input {
+            width: 90px;
+            padding: 14px 8px;
+            font-size: 22px;
+            border-radius: 30px;
+            border: none;
+            text-align: center;
+            font-weight: bold;
+            background: #efe3c9;
+            border-bottom: 6px solid #8b7a54;
+        }
+        .pot-area {
+            background: #1f2e1b;
+            padding: 12px 25px;
+            border-radius: 50px;
+            color: #ffddaa;
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            border: 2px solid #facf5a;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        .log-area {
+            background: #0a1f1a;
+            color: #b5e5b0;
+            padding: 12px;
+            margin-top: 25px;
+            border-radius: 20px;
+            font-family: monospace;
+            font-size: 14px;
+            max-height: 140px;
+            overflow-y: auto;
+            border: 1px solid #5f7a60;
+        }
+
+        .status-badge {
+            background: #3c280e;
+            padding: 6px 16px;
+            border-radius: 40px;
+            color: #ffd98c;
+            font-weight: 500;
+        }
+
+        .debug-tools {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .debug-tools button {
+            background: #3f6e4a;
+            color: white;
+            border-radius: 30px;
+            padding: 8px 16px;
+            border: none;
+            cursor: pointer;
+        }
+        .debug-tools button:hover {
+            background: #4f8e5a;
+        }
+    </style>
 </head>
 <body>
-<h2>WebSocket 聊天室</h2>
+<div class="poker-table">
+    <div class="felt">
+        <!-- 公共牌展示区 -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <span class="status-badge" id="gameStateLabel">PRE_FLOP</span>
+            <div class="pot-area" id="potDisplay">底池: 0</div>
+        </div>
+        <div class="board-cards" id="communityCardsContainer">
+            <!-- 动态生成5个公共牌位置 -->
+            <div class="card-slot">?</div>
+            <div class="card-slot">?</div>
+            <div class="card-slot">?</div>
+            <div class="card-slot">?</div>
+            <div class="card-slot">?</div>
+        </div>
 
-<div>
-    <button onclick="connect()">连接</button>
-    <button onclick="disconnect()">断开</button>
-</div>
+        <!-- 玩家区域 (固定2人) -->
+        <div class="players-row" id="playersArea">
+            <!-- 玩家0 -->
+            <div class="player-spot" id="player0Spot">
+                <div style="font-size:20px; display:flex; justify-content:space-between;">
+                    <span id="player0Name">等待玩家...</span>
+                    <span id="player0Status">⏳</span>
+                </div>
+                <div class="hole-cards" id="player0Hole">
+                    <div class="hole-card back">??</div>
+                    <div class="hole-card back">??</div>
+                </div>
+                <div class="chips-info">
+                    <span>💰 <span id="player0Chips">0</span></span>
+                    <span>投入 <span id="player0Invested">0</span></span>
+                </div>
+            </div>
+            <!-- 玩家1 (我方) -->
+            <div class="player-spot" id="player1Spot">
+                <div style="font-size:20px; display:flex; justify-content:space-between;">
+                    <span id="player1Name">等待玩家...</span>
+                    <span id="player1Status">⏳</span>
+                </div>
+                <div class="hole-cards" id="player1Hole">
+                    <div class="hole-card back" id="myCard1">??</div>
+                    <div class="hole-card back" id="myCard2">??</div>
+                </div>
+                <div class="chips-info">
+                    <span>💰 <span id="player1Chips">0</span></span>
+                    <span>投入 <span id="player1Invested">0</span></span>
+                </div>
+            </div>
+        </div>
 
-<div>
-    <input type="text" id="messageInput" placeholder="输入消息">
-    <button onclick="sendMessage()">发送</button>
-</div>
+        <!-- 行动决策区 -->
+        <div class="action-panel" id="actionPanel">
+            <button class="action-btn" id="callBtn" disabled>CALL</button>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <button class="action-btn" id="raiseBtn" disabled>RAISE</button>
+                <input type="number" id="raiseAmount" class="raise-input" value="2" min="1" max="100" step="1" disabled>
+            </div>
+            <button class="action-btn" id="foldBtn" disabled>FOLD</button>
+            <div style="color:#ffdbb5; margin-left: 10px; font-size: 18px;" id="decisionHint">等待游戏开始...</div>
+        </div>
 
-<div id="messageArea" style="border:1px solid #ccc; height:300px; overflow-y:auto;">
-    <!-- 消息显示在这里 -->
+        <!-- 消息日志 -->
+        <div class="log-area" id="logPanel">
+            [系统] 等待连接...
+        </div>
+    </div>
 </div>
 
 <script>
-    let socket = null;
 
+    let socket = null;
     const token = '[[${jwtToken}]]';
 
-    // 1. 连接服务器
-    function connect() {
-        // 创建 WebSocket 连接
-        // ws://localhost:8080/ws 是连接地址
-        socket = new WebSocket('ws://localhost:8080/ws');
+    // ============ 状态管理 ============
+    const state = {
+        // 我的玩家ID（从服务器获取）
+        myPlayerId: null,
+        // 我的索引位置（在playerPublicVO中的索引）
+        myIndex: -1,
+        // 当前需要决策的玩家序号
+        currentDecisionMakerId: -1,
+        // 游戏状态
+        gameState: 'INIT',
+        // 公共牌
+        publicCards: [null, null, null, null, null],
+        // 底池
+        pot: 0,
+        // 玩家列表
+        players: [
+            { playerId: null, chipsInHand: 0, chipsInvested: 0, isContinuingGame: false },
+            { playerId: null, chipsInHand: 0, chipsInvested: 0, isContinuingGame: false }
+        ],
+        // 我的手牌
+        myHoleCards: [null, null]
+    };
 
-        // 连接成功时
-        socket.onopen = function(event) {
-            addMessage("系统: 连接成功！");
-            socket.send(token);
-        };
-
-        // 收到消息时
-        socket.onmessage = function(event) {
-            addMessage("服务器: " + event.data);
-        };
-
-        // 连接关闭时
-        socket.onclose = function(event) {
-            addMessage("系统: 连接断开");
-        };
-
-        // 发生错误时
-        socket.onerror = function(event) {
-            addMessage("系统: 发生错误");
-        };
+    // ============ 辅助函数 ============
+    function suitSymbol(suit) {
+        switch (suit) {
+            case 'hearts': return '♥';
+            case 'diamonds': return '♦';
+            case 'clubs': return '♣';
+            case 'spades': return '♠';
+            default: return '?';
+        }
     }
 
-    // 2. 发送消息
-    function sendMessage() {
+    function cardColor(suit) {
+        return (suit === 'hearts' || suit === 'diamonds') ? 'red' : 'black';
+    }
+
+    // 提取玩家名的简写（去掉时间戳）
+    function getPlayerShortName(fullId) {
+        if (!fullId) return '等待玩家...';
+        return fullId.split(' ')[0];
+    }
+
+    // ============ UI 渲染 ============
+    function renderAll() {
+        renderCommunityCards();
+        renderPlayers();
+        renderMisc();
+        highlightDecisionMaker();
+    }
+
+    // 渲染公共牌
+    function renderCommunityCards() {
+        const container = document.getElementById('communityCardsContainer');
+        container.innerHTML = '';
+
+        for (let i = 0; i < 5; i++) {
+            const cardData = state.publicCards && state.publicCards[i];
+
+            if (cardData && cardData.rank && cardData.suit) {
+                const cardDiv = document.createElement('div');
+                cardDiv.className = `card ${cardColor(cardData.suit)}`;
+                const suitSym = suitSymbol(cardData.suit);
+                cardDiv.innerHTML = `
+                    <div class="top-left">${cardData.rank}${suitSym}</div>
+                    <div class="suit-big">${suitSym}</div>
+                    <div class="bottom-right">${cardData.rank}${suitSym}</div>
+                `;
+                container.appendChild(cardDiv);
+            } else {
+                const emptySlot = document.createElement('div');
+                emptySlot.className = 'card-slot';
+                emptySlot.textContent = '?';
+                container.appendChild(emptySlot);
+            }
+        }
+    }
+
+    // 渲染玩家信息
+    function renderPlayers() {
+        // 玩家0 (对手)
+        const p0 = state.players[0] || {};
+        document.getElementById('player0Name').innerText = getPlayerShortName(p0.playerId);
+        document.getElementById('player0Chips').innerText = p0.chipsInHand ?? 0;
+        document.getElementById('player0Invested').innerText = p0.chipsInvested ?? 0;
+        document.getElementById('player0Status').innerHTML = p0.isContinuingGame ? '✓ 游戏中' : '✗ 出局';
+
+        // 对手手牌始终显示背面
+        const p0HoleDiv = document.getElementById('player0Hole');
+        p0HoleDiv.innerHTML = `
+            <div class="hole-card back">??</div>
+            <div class="hole-card back">??</div>
+        `;
+
+        // 玩家1
+        const p1 = state.players[1] || {};
+        document.getElementById('player1Name').innerText = getPlayerShortName(p1.playerId);
+        document.getElementById('player1Chips').innerText = p1.chipsInHand ?? 0;
+        document.getElementById('player1Invested').innerText = p1.chipsInvested ?? 0;
+        document.getElementById('player1Status').innerHTML = p1.isContinuingGame ? '✓ 游戏中' : '✗ 出局';
+
+        // 我方手牌
+        const card1Div = document.getElementById('myCard1');
+        const card2Div = document.getElementById('myCard2');
+
+        if (state.myHoleCards && state.myHoleCards[0]) {
+            const c1 = state.myHoleCards[0];
+            card1Div.className = `hole-card ${cardColor(c1.suit)}`;
+            card1Div.innerHTML = `${c1.rank}${suitSymbol(c1.suit)}`;
+        } else {
+            card1Div.className = 'hole-card back';
+            card1Div.innerHTML = '??';
+        }
+
+        if (state.myHoleCards && state.myHoleCards[1]) {
+            const c2 = state.myHoleCards[1];
+            card2Div.className = `hole-card ${cardColor(c2.suit)}`;
+            card2Div.innerHTML = `${c2.rank}${suitSymbol(c2.suit)}`;
+        } else {
+            card2Div.className = 'hole-card back';
+            card2Div.innerHTML = '??';
+        }
+    }
+
+    // 渲染底池和游戏状态
+    function renderMisc() {
+        document.getElementById('gameStateLabel').innerText = state.gameState || '—';
+        document.getElementById('potDisplay').innerHTML = `底池: ${state.pot}`;
+    }
+
+    // 高亮当前决策玩家并控制按钮
+    function highlightDecisionMaker() {
+        const spot0 = document.getElementById('player0Spot');
+        const spot1 = document.getElementById('player1Spot');
+        const hintEl = document.getElementById('decisionHint');
+
+        spot0.classList.remove('active-turn');
+        spot1.classList.remove('active-turn');
+
+        // 判断轮到谁
+        addLog("My pos: " + state.myPlayerId);
+        addLog("It's one's turn: " + state.currentDecisionMakerId);
+
+        const isMyTurn = (state.currentDecisionMakerId !== -1 &&
+            state.myPlayerId &&
+            state.currentDecisionMakerId.toString() === state.myPlayerId.toString());
+
+        addLog("My turn: " + isMyTurn);
+
+        if (isMyTurn) {
+            spot1.classList.add('active-turn');
+            hintEl.innerText = '👉 轮到你行动';
+        } else if (state.currentDecisionMakerId !== -1) {
+            spot0.classList.add('active-turn');
+            hintEl.innerText = '对手思考中...';
+        } else {
+            hintEl.innerText = '等待游戏开始...';
+        }
+
+        // 控制按钮启用状态：必须轮到我的回合且我仍在游戏中
+        const shouldEnable = isMyTurn &&
+            state.players[state.myPlayerId - 1] &&
+            state.players[state.myPlayerId - 1].isContinuingGame === true;
+
+        enableActionButtons(shouldEnable);
+    }
+
+    // 启用/禁用操作按钮
+    function enableActionButtons(enable) {
+        const callBtn = document.getElementById('callBtn');
+        const raiseBtn = document.getElementById('raiseBtn');
+        const foldBtn = document.getElementById('foldBtn');
+        const raiseInput = document.getElementById('raiseAmount');
+
+        callBtn.disabled = !enable;
+        raiseBtn.disabled = !enable;
+        foldBtn.disabled = !enable;
+        raiseInput.disabled = !enable;
+    }
+
+    // 添加日志
+    function addLog(message) {
+        const logDiv = document.getElementById('logPanel');
+        const p = document.createElement('div');
+        p.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+        logDiv.appendChild(p);
+        logDiv.scrollTop = logDiv.scrollHeight;
+
+        // 限制日志条数
+        if (logDiv.children.length > 20) {
+            logDiv.removeChild(logDiv.children[0]);
+        }
+    }
+
+    // ============ 消息处理 ============
+    function onServerMessage(jsonStr) {
+        try {
+            const msg = JSON.parse(jsonStr);
+            addLog('📩 收到: ' + jsonStr.substring(0, 60) + (jsonStr.length > 60 ? '...' : ''));
+
+            // 处理玩家位置信息
+            if (msg.dataType === 'PLAYER_POS') {
+                state.myIndex = msg.data;
+                state.myPlayerId = msg.data;
+                addLog(`ℹ️ 我的位置索引: ${state.myIndex}`);
+            }
+
+            // 处理私有手牌
+            else if (msg.dataType === 'PRIVATE_VO' && msg.data && msg.data.holeCards) {
+                state.myHoleCards = msg.data.holeCards;
+                addLog(`🔒 我的手牌: ${state.myHoleCards.map(c => c.rank + suitSymbol(c.suit)).join(' ')}`);
+                renderPlayers();
+            }
+
+            // 处理公共状态
+            else if (msg.dataType === 'PUBLIC_VO' && msg.data) {
+                const publicVo = msg.data;
+                const tablePublic = publicVo.tablePublicVO || {};
+                const playerPublicList = publicVo.playerPublicVO || [];
+                const potPublic = publicVo.potPublicVO || {};
+
+                // 更新游戏状态
+                state.gameState = tablePublic.currentGameState || state.gameState;
+                state.currentDecisionMakerId = tablePublic.currentDecisionMakerId ?? -1;
+                state.publicCards = tablePublic.publicCards || state.publicCards;
+                state.pot = potPublic.allInvestedChips ?? 0;
+
+                // 更新玩家数据
+                if (playerPublicList.length >= 2) {
+                    state.players = playerPublicList.map(p => ({
+                        playerId: p.playerPersonalVO?.info?.playerId || null,
+                        chipsInHand: p.chipsInHand ?? 0,
+                        chipsInvested: p.chipsInvested ?? 0,
+                        isContinuingGame: p.isContinuingGame ?? false,
+                    }));
+
+                    // 如果还不知道我的玩家ID，从玩家数据中根据索引获取
+                    if (!state.myPlayerId && state.myIndex !== -1 && state.players[state.myIndex]) {
+                        state.myPlayerId = state.players[state.myIndex].playerId;
+                        addLog(`ℹ️ 我的玩家ID: ${state.myPlayerId}`);
+                    }
+                }
+
+                // 重新渲染所有UI
+                renderAll();
+            }
+
+        } catch (e) {
+            addLog('❌ 解析消息失败: ' + e.message);
+        }
+    }
+
+    // ============ 发送决策 ============
+    function sendDecision(decision, amount = '0') {
         if (!socket || socket.readyState !== WebSocket.OPEN) {
-            alert("请先连接！");
+            addLog('❌ WebSocket未连接');
             return;
         }
 
-        const input = document.getElementById('messageInput');
-        const message = input.value;
+        const decisionMsg = {
+            dataType: 'PLAYER_DECISION',
+            data: {
+                decision: decision,
+                amount: amount.toString()
+            }
+        };
 
-        if (message) {
-            socket.send(message);
-            addMessage("我: " + message);
-            input.value = '';
+        const jsonStr = JSON.stringify(decisionMsg);
+        addLog(`🔼 发送: ${jsonStr}`);
+        socket.send(jsonStr);
+
+        // 发送后立即禁用按钮，避免重复点击
+        enableActionButtons(false);
+    }
+
+    // ============ 事件绑定 ============
+    function bindActions() {
+        document.getElementById('callBtn').addEventListener('click', () => {
+            sendDecision('CALL', '0');
+        });
+
+        document.getElementById('raiseBtn').addEventListener('click', () => {
+            const amount = document.getElementById('raiseAmount').value;
+            sendDecision('RAISE', amount);
+        });
+
+        document.getElementById('foldBtn').addEventListener('click', () => {
+            sendDecision('FOLD', '0');
+        });
+    }
+
+    // ============ WebSocket 连接 ============
+    function connect() {
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            addLog('ℹ️ 已经连接');
+            return;
+        }
+
+        try {
+            socket = new WebSocket('ws://localhost:8080/ws');
+
+            socket.onopen = function() {
+                addLog('✅ WebSocket已连接');
+                socket.send(token);
+                addLog('📤 发送认证令牌');
+            };
+
+            socket.onmessage = function(event) {
+                onServerMessage(event.data);
+            };
+
+            socket.onclose = function(event) {
+                addLog(`🔌 WebSocket连接关闭 (代码: ${event.code})`);
+                socket = null;
+                enableActionButtons(false);
+                document.getElementById('decisionHint').innerText = '连接已断开';
+            };
+
+            socket.onerror = function(error) {
+                addLog('❌ WebSocket错误');
+                console.error('WebSocket error:', error);
+            };
+
+        } catch (e) {
+            addLog('❌ 连接失败: ' + e.message);
         }
     }
 
-    // 3. 断开连接
     function disconnect() {
         if (socket) {
             socket.close();
+            socket = null;
         }
     }
 
-    // 4. 显示消息
-    function addMessage(message) {
-        const area = document.getElementById('messageArea');
-        const div = document.createElement('div');
-        div.textContent = message;
-        area.appendChild(div);
-        area.scrollTop = area.scrollHeight;
-    }
+    // ============ 初始化 ============
+    window.addEventListener('DOMContentLoaded', function() {
+        bindActions();
 
-    // 页面加载时自动连接（可选）
-    window.onload = function() {
+        // 重置状态
+        state.myPlayerId = null;
+        state.myIndex = -1;
+        state.currentDecisionMakerId = -1;
+        state.gameState = 'INIT';
+        state.publicCards = [null, null, null, null, null];
+        state.pot = 0;
+        state.players = [
+            { playerId: null, chipsInHand: 0, chipsInvested: 0, isContinuingGame: false },
+            { playerId: null, chipsInHand: 0, chipsInvested: 0, isContinuingGame: false }
+        ];
+        state.myHoleCards = [null, null];
+
+        // 重新渲染
+        renderAll();
+        addLog('系统: 等待WebSocket连接...');
+
+        // 自动连接
         connect();
-    };
+    });
+
+    // 清理连接（页面关闭时）
+    window.addEventListener('beforeunload', function() {
+        disconnect();
+    });
+
+    // 暴露给调试工具
+    window.connect = connect;
+    window.disconnect = disconnect;
+    window.onServerMessage = onServerMessage; // 保留用于调试
 </script>
+
 </body>
 </html>
