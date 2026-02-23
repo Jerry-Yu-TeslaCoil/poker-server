@@ -282,38 +282,7 @@
         </div>
 
         <!-- 玩家区域 (固定2人) -->
-        <div class="players-row" id="playersArea">
-            <!-- 玩家0 -->
-            <div class="player-spot" id="player0Spot">
-                <div style="font-size:20px; display:flex; justify-content:space-between;">
-                    <span id="player0Name">等待玩家...</span>
-                    <span id="player0Status">⏳</span>
-                </div>
-                <div class="hole-cards" id="player0Hole">
-                    <div class="hole-card back">??</div>
-                    <div class="hole-card back">??</div>
-                </div>
-                <div class="chips-info">
-                    <span>💰 <span id="player0Chips">0</span></span>
-                    <span>投入 <span id="player0Invested">0</span></span>
-                </div>
-            </div>
-            <!-- 玩家1 (我方) -->
-            <div class="player-spot" id="player1Spot">
-                <div style="font-size:20px; display:flex; justify-content:space-between;">
-                    <span id="player1Name">等待玩家...</span>
-                    <span id="player1Status">⏳</span>
-                </div>
-                <div class="hole-cards" id="player1Hole">
-                    <div class="hole-card back" id="myCard1">??</div>
-                    <div class="hole-card back" id="myCard2">??</div>
-                </div>
-                <div class="chips-info">
-                    <span>💰 <span id="player1Chips">0</span></span>
-                    <span>投入 <span id="player1Invested">0</span></span>
-                </div>
-            </div>
-        </div>
+        <div class="players-row" id="playersArea"></div>
 
         <!-- 行动决策区 -->
         <div class="action-panel" id="actionPanel">
@@ -338,12 +307,11 @@
     let socket = null;
     const token = '[[${jwtToken}]]';
 
+    connect();
+
     // ============ 状态管理 ============
     const state = {
-        // 我的玩家ID（从服务器获取）
         myPlayerId: null,
-        // 我的索引位置（在playerPublicVO中的索引）
-        myIndex: -1,
         // 当前需要决策的玩家序号
         currentDecisionMakerId: -1,
         // 游戏状态
@@ -353,10 +321,7 @@
         // 底池
         pot: 0,
         // 玩家列表
-        players: [
-            { playerId: null, chipsInHand: 0, chipsInvested: 0, isContinuingGame: false },
-            { playerId: null, chipsInHand: 0, chipsInvested: 0, isContinuingGame: false }
-        ],
+        players: [],
         // 我的手牌
         myHoleCards: [null, null]
     };
@@ -384,11 +349,76 @@
 
     // ============ UI 渲染 ============
     function renderAll() {
+        renderPlayers();
         renderCommunityCards();
         renderPlayers();
         renderMisc();
         highlightDecisionMaker();
     }
+
+    function renderPlayers() {
+        const playersArea = document.getElementById('playersArea');
+
+        // 清空现有内容
+        playersArea.innerHTML = '';
+
+        let players = state.players;
+
+        // state.players = playerPublicList.map(p => ({
+        //     playerId: p.playerPersonalVO?.info?.playerId || null,
+        //     chipsInHand: p.chipsInHand ?? 0,
+        //     chipsInvested: p.chipsInvested ?? 0,
+        //     isContinuingGame: p.isContinuingGame ?? false,
+        // }));
+
+        // 动态生成每个玩家的HTML
+        players.forEach((player, index) => {
+            let pokerCard = [];
+            if (state.myPlayerId === index + 1) {
+                pokerCard[0] = state.myHoleCards[0];
+                pokerCard[1] = state.myHoleCards[1];
+            } else {
+                pokerCard[0] = player.pokerCard[0];
+                pokerCard[1] = player.pokerCard[1];
+            }
+
+            const cardClass0 = pokerCard[0] ? "card " + cardColor(pokerCard[0].suit) : "hole-card back";
+            const cardClass1 = pokerCard[1] ? "card " + cardColor(pokerCard[1].suit) : "hole-card back";
+
+
+            const playerHTML = `
+            <div class="player-spot" id="player${index}Spot">
+                <div style="font-size:20px; display:flex; justify-content:space-between;">
+                    <span id="player${index}Name">${player.playerId || '等待玩家...'}</span>
+                    <span id="player${index}Status">${player.isContinuingGame || '⏳'}</span>
+                </div>
+                <div class="hole-cards" id="player${index}Hole">
+                    <div class="${cardClass0}" id="pos${index}HoleCard1">
+                    ${pokerCard[0] ? pokerCard[0].rank + suitSymbol(pokerCard[0].suit) : '??'}
+                    </div>
+                    <div class="${cardClass1}" id="pos${index}HoleCard2">
+                    ${pokerCard[1] ? pokerCard[1].rank + suitSymbol(pokerCard[1].suit) : '??'}
+                    </div>
+                </div>
+                <div class="chips-info">
+                    <span>💰 <span id="player${index}Chips">${player.chipsInHand || 0}</span></span>
+                    <span>投入 <span id="player${index}Invested">${player.chipsInvested || 0}</span></span>
+                </div>
+            </div>
+        `;
+            playersArea.innerHTML += playerHTML;
+        });
+    }
+
+    // 使用示例
+    const players = [
+        { name: '玩家1', chips: 1000, invested: 50, status: '✅', card1: 'A♥', card2: 'K♠' },
+        { name: '玩家2', chips: 1000, invested: 0, status: '⏳' },
+        { name: '玩家3', chips: 1000, invested: 0, status: '⏳' },
+        { name: '玩家4', chips: 1000, invested: 0, status: '⏳' }
+    ];
+
+    renderPlayers(players);
 
     // 渲染公共牌
     function renderCommunityCards() {
@@ -414,52 +444,6 @@
                 emptySlot.textContent = '?';
                 container.appendChild(emptySlot);
             }
-        }
-    }
-
-    // 渲染玩家信息
-    function renderPlayers() {
-        // 玩家0 (对手)
-        const p0 = state.players[0] || {};
-        document.getElementById('player0Name').innerText = getPlayerShortName(p0.playerId);
-        document.getElementById('player0Chips').innerText = p0.chipsInHand ?? 0;
-        document.getElementById('player0Invested').innerText = p0.chipsInvested ?? 0;
-        document.getElementById('player0Status').innerHTML = p0.isContinuingGame ? '✓ 游戏中' : '✗ 出局';
-
-        // 对手手牌始终显示背面
-        const p0HoleDiv = document.getElementById('player0Hole');
-        p0HoleDiv.innerHTML = `
-            <div class="hole-card back">??</div>
-            <div class="hole-card back">??</div>
-        `;
-
-        // 玩家1
-        const p1 = state.players[1] || {};
-        document.getElementById('player1Name').innerText = getPlayerShortName(p1.playerId);
-        document.getElementById('player1Chips').innerText = p1.chipsInHand ?? 0;
-        document.getElementById('player1Invested').innerText = p1.chipsInvested ?? 0;
-        document.getElementById('player1Status').innerHTML = p1.isContinuingGame ? '✓ 游戏中' : '✗ 出局';
-
-        // 我方手牌
-        const card1Div = document.getElementById('myCard1');
-        const card2Div = document.getElementById('myCard2');
-
-        if (state.myHoleCards && state.myHoleCards[0]) {
-            const c1 = state.myHoleCards[0];
-            card1Div.className = `hole-card ${cardColor(c1.suit)}`;
-            card1Div.innerHTML = `${c1.rank}${suitSymbol(c1.suit)}`;
-        } else {
-            card1Div.className = 'hole-card back';
-            card1Div.innerHTML = '??';
-        }
-
-        if (state.myHoleCards && state.myHoleCards[1]) {
-            const c2 = state.myHoleCards[1];
-            card2Div.className = `hole-card ${cardColor(c2.suit)}`;
-            card2Div.innerHTML = `${c2.rank}${suitSymbol(c2.suit)}`;
-        } else {
-            card2Div.className = 'hole-card back';
-            card2Div.innerHTML = '??';
         }
     }
 
@@ -489,21 +473,22 @@
         addLog("My turn: " + isMyTurn);
 
         if (isMyTurn) {
-            spot1.classList.add('active-turn');
             hintEl.innerText = '👉 轮到你行动';
         } else if (state.currentDecisionMakerId !== -1) {
-            spot0.classList.add('active-turn');
             hintEl.innerText = '对手思考中...';
         } else {
             hintEl.innerText = '等待游戏开始...';
         }
 
-        // 控制按钮启用状态：必须轮到我的回合且我仍在游戏中
-        const shouldEnable = isMyTurn &&
-            state.players[state.myPlayerId - 1] &&
-            state.players[state.myPlayerId - 1].isContinuingGame === true;
+        if (state.currentDecisionMakerId !== -1) {
+            if (state.currentDecisionMakerId === 1) {
+                spot0.classList.add('active-turn');
+            } else {
+                spot1.classList.add('active-turn');
+            }
+        }
 
-        enableActionButtons(shouldEnable);
+        enableActionButtons(isMyTurn);
     }
 
     // 启用/禁用操作按钮
@@ -537,13 +522,12 @@
     function onServerMessage(jsonStr) {
         try {
             const msg = JSON.parse(jsonStr);
-            addLog('📩 收到: ' + jsonStr.substring(0, 60) + (jsonStr.length > 60 ? '...' : ''));
+            addLog('📩 收到: ' + jsonStr);
 
             // 处理玩家位置信息
             if (msg.dataType === 'PLAYER_POS') {
-                state.myIndex = msg.data;
                 state.myPlayerId = msg.data;
-                addLog(`ℹ️ 我的位置索引: ${state.myIndex}`);
+                addLog(`ℹ️ 我的位置索引: ${state.myPlayerId}`);
             }
 
             // 处理私有手牌
@@ -563,35 +547,24 @@
                 // 更新游戏状态
                 state.gameState = tablePublic.currentGameState || state.gameState;
                 state.currentDecisionMakerId = tablePublic.currentDecisionMakerId ?? -1;
-                state.publicCards = tablePublic.publicCards || state.publicCards;
+                state.publicCards = tablePublic.publicCards || [];
                 state.pot = potPublic.allInvestedChips ?? 0;
 
-                // 更新玩家数据
-                if (playerPublicList.length >= 2) {
-                    state.players = playerPublicList.map(p => ({
-                        playerId: p.playerPersonalVO?.info?.playerId || null,
-                        chipsInHand: p.chipsInHand ?? 0,
-                        chipsInvested: p.chipsInvested ?? 0,
-                        isContinuingGame: p.isContinuingGame ?? false,
-                    }));
-
-                    // 如果还不知道我的玩家ID，从玩家数据中根据索引获取
-                    if (!state.myPlayerId && state.myIndex !== -1 && state.players[state.myIndex]) {
-                        state.myPlayerId = state.players[state.myIndex].playerId;
-                        addLog(`ℹ️ 我的玩家ID: ${state.myPlayerId}`);
-                    }
-                }
-
-                // 重新渲染所有UI
-                renderAll();
+                state.players = playerPublicList.map(p => ({
+                    playerId: p.playerPersonalVO?.info?.playerId || null,
+                    chipsInHand: p.chipsInHand ?? 0,
+                    chipsInvested: p.chipsInvested ?? 0,
+                    isContinuingGame: p.isContinuingGame ?? false,
+                    pokerCard: p.pokerCard ?? [null, null],
+                }));
             }
-
+            // 重新渲染所有UI
+            renderAll();
         } catch (e) {
             addLog('❌ 解析消息失败: ' + e.message);
         }
     }
 
-    // ============ 发送决策 ============
     function sendDecision(decision, amount = '0') {
         if (!socket || socket.readyState !== WebSocket.OPEN) {
             addLog('❌ WebSocket未连接');
@@ -610,11 +583,9 @@
         addLog(`🔼 发送: ${jsonStr}`);
         socket.send(jsonStr);
 
-        // 发送后立即禁用按钮，避免重复点击
         enableActionButtons(false);
     }
 
-    // ============ 事件绑定 ============
     function bindActions() {
         document.getElementById('callBtn').addEventListener('click', () => {
             sendDecision('CALL', '0');
@@ -630,7 +601,6 @@
         });
     }
 
-    // ============ WebSocket 连接 ============
     function connect() {
         if (socket && socket.readyState === WebSocket.OPEN) {
             addLog('ℹ️ 已经连接');
@@ -643,7 +613,6 @@
             socket.onopen = function() {
                 addLog('✅ WebSocket已连接');
                 socket.send(token);
-                addLog('📤 发送认证令牌');
             };
 
             socket.onmessage = function(event) {
@@ -651,19 +620,19 @@
             };
 
             socket.onclose = function(event) {
-                addLog(`🔌 WebSocket连接关闭 (代码: ${event.code})`);
+                addLog(`WebSocket连接关闭 (代码: ${event.code})`);
                 socket = null;
                 enableActionButtons(false);
                 document.getElementById('decisionHint').innerText = '连接已断开';
             };
 
             socket.onerror = function(error) {
-                addLog('❌ WebSocket错误');
+                addLog('WebSocket错误');
                 console.error('WebSocket error:', error);
             };
 
         } catch (e) {
-            addLog('❌ 连接失败: ' + e.message);
+            addLog('连接失败: ' + e.message);
         }
     }
 
@@ -674,13 +643,11 @@
         }
     }
 
-    // ============ 初始化 ============
     window.addEventListener('DOMContentLoaded', function() {
         bindActions();
 
         // 重置状态
         state.myPlayerId = null;
-        state.myIndex = -1;
         state.currentDecisionMakerId = -1;
         state.gameState = 'INIT';
         state.publicCards = [null, null, null, null, null];
