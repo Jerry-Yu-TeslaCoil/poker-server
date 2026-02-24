@@ -6,8 +6,8 @@ import com.game.pokerserver.infrastructure.WebGamePlayer;
 import com.game.pokerserver.infrastructure.WebIdentifier;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import table.rule.decision.impl.FoldDecision;
 
 import java.util.Calendar;
 
@@ -32,7 +32,7 @@ public class IdentityController {
                                  @ModelAttribute("gamePlayer")
                                  WebGamePlayer gamePlayer) {
         username = username + " " + Calendar.getInstance().getTime().toInstant();
-        gamePlayer.setController(new WebController());
+        gamePlayer.setController(new WebController(20000, new FoldDecision()));
         gamePlayer.setPlayerIdentifier(new WebIdentifier(new PlayerIdentity(username)));
         log.info("user identity:{ {} } applied for connection", username);
         return "redirect:/game";

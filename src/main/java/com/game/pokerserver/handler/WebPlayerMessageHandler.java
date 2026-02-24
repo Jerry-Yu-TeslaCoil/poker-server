@@ -81,14 +81,16 @@ public class WebPlayerMessageHandler implements WebSocketHandler {
     }
 
     @Override
-    public void handleTransportError(@NonNull WebSocketSession session, @NonNull Throwable exception) throws Exception {
+    public void handleTransportError(@NonNull WebSocketSession session, @NonNull Throwable exception) {
 
     }
 
     @Override
-    public void afterConnectionClosed(@NonNull WebSocketSession session, @NonNull CloseStatus closeStatus) throws Exception {
+    public void afterConnectionClosed(@NonNull WebSocketSession session, @NonNull CloseStatus closeStatus) {
         WebGamePlayer correspondPlayer = sessionToPlayer.get(session);
         if (correspondPlayer != null) {
+            correspondPlayer.playerController().setSession(null);
+            correspondPlayer.playerController().sessionClosed();
             //TODO: Call game service to shutdown player or give a default action.
             log.info("Connection {} closed", correspondPlayer
                     .playerIdentifier().getPlayerPersonalVO().getInfo().playerId());

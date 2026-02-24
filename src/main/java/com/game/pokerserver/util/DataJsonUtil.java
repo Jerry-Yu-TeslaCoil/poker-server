@@ -20,6 +20,8 @@ public class DataJsonUtil {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
+    public static final String FOLD_DECISION_JSON = "{\"dataType\":\"PLAYER_DECISION\",\"data\":{\"decision\":\"FOLD\",\"amount\":\"0\"}}";
+
     public static String convertToJson(PublicVO publicVO) {
         return convertToJson("PUBLIC_VO", publicVO);
     }
