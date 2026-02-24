@@ -8,6 +8,7 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import table.rule.decision.DecisionRequest;
 import table.rule.decision.PlayerDecision;
+import table.rule.decision.impl.FoldDecision;
 import table.vo.privateinfo.PlayerPrivateVO;
 import table.vo.publicinfo.PublicVO;
 
@@ -35,7 +36,6 @@ public class WebController implements PlayerController {
             session.sendMessage(new TextMessage(DataJsonUtil.convertToJson(publicVO)));
         } catch (IOException e) {
             log.error("update public info failed", e);
-            throw new RuntimeException(e);
         }
     }
 
@@ -45,7 +45,6 @@ public class WebController implements PlayerController {
             session.sendMessage(new TextMessage(DataJsonUtil.convertToJson(playerPrivateVO)));
         } catch (IOException e) {
             log.error("update private info failed", e);
-            throw new RuntimeException(e);
         }
     }
 
@@ -55,7 +54,7 @@ public class WebController implements PlayerController {
             session.sendMessage(new TextMessage(DataJsonUtil.convertToJson(decisionRequest)));
         } catch (IOException e) {
             log.error("get decision failed", e);
-            throw new RuntimeException(e);
+            return new FoldDecision();
         }
         String message = messageFuture.join();
         messageFuture = new CompletableFuture<>();

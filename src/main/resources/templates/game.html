@@ -455,16 +455,19 @@
 
     // 高亮当前决策玩家并控制按钮
     function highlightDecisionMaker() {
-        const spot0 = document.getElementById('player0Spot');
-        const spot1 = document.getElementById('player1Spot');
         const hintEl = document.getElementById('decisionHint');
+        const players = [];
 
-        spot0.classList.remove('active-turn');
-        spot1.classList.remove('active-turn');
+        for (let i = 0; i < state.players.length; i++) {
+            players.push(document.getElementById(`player${i}Spot`));
+            players[i].classList.remove('active-turn');
+        }
 
         // 判断轮到谁
         addLog("My pos: " + state.myPlayerId);
         addLog("It's one's turn: " + state.currentDecisionMakerId);
+
+        players[state.currentDecisionMakerId - 1].classList.add('active-turn');
 
         const isMyTurn = (state.currentDecisionMakerId !== -1 &&
             state.myPlayerId &&
@@ -478,14 +481,6 @@
             hintEl.innerText = '对手思考中...';
         } else {
             hintEl.innerText = '等待游戏开始...';
-        }
-
-        if (state.currentDecisionMakerId !== -1) {
-            if (state.currentDecisionMakerId === 1) {
-                spot0.classList.add('active-turn');
-            } else {
-                spot1.classList.add('active-turn');
-            }
         }
 
         enableActionButtons(isMyTurn);
@@ -608,7 +603,7 @@
         }
 
         try {
-            socket = new WebSocket('ws://localhost:8080/ws');
+            socket = new WebSocket('ws://viphk.nnhk.cc:10253/ws');
 
             socket.onopen = function() {
                 addLog('✅ WebSocket已连接');
