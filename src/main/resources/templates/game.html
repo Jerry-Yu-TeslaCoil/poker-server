@@ -3,58 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>♢ 德州扑克 · 极简终端 ♤</title>
+    <title>策略训练 · 纯竞技扑克</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Inter', 'Segoe UI', 'Roboto', system-ui, sans-serif;
         }
 
         body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(145deg, #1a2f1f 0%, #0c1a12 100%);
             min-height: 100vh;
-            background: radial-gradient(circle at 30% 10%, #1d4b2e, #0a2818);
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 16px;
-        }
-
-        /* 主桌布 —— 深邃仿毛毡 + 金属木边 */
-        .poker-table {
-            max-width: 1300px;
-            width: 100%;
-            background: #3b8b6e;
-            background: linear-gradient(165deg, #276b51, #1c533e);
-            border-radius: 240px 240px 160px 160px;
-            padding: 35px 35px 45px 35px;
-            border: 10px solid #b68b54;
-            border-bottom-color: #7b5f36;
-            box-shadow: 0 35px 40px rgba(0, 0, 0, 0.7), inset 0 -2px 8px rgba(0,0,0,0.5), inset 0 4px 10px rgba(255, 235, 140, 0.4);
+            margin: 0;
+            padding: 20px;
             position: relative;
+            color: #ecead8;
         }
 
-        /* 内层绒面 (细腻点阵纹理) */
-        .felt {
-            background: #0a412b;
-            background-image: 
-                radial-gradient(circle at 30% 40%, #1f7a58 3px, transparent 3px),
-                radial-gradient(circle at 70% 80%, #1f7a58 3px, transparent 3px);
-            background-size: 40px 40px;
-            border-radius: 200px 200px 130px 130px;
-            padding: 28px 24px 32px 24px;
-            border: 3px solid #edc779;
-            box-shadow: inset 0 0 40px rgba(0, 20, 5, 0.9), 0 0 0 2px #3f2d12 inset;
+        /* 细微的卡片纹理覆盖 (低调压花) */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="none" /><path d="M10 10 L 90 10 M10 30 L 90 30 M10 50 L 90 50 M10 70 L 90 70 M10 90 L 90 90 M10 10 L 10 90 M30 10 L 30 90 M50 10 L 50 90 M70 10 L 70 90 M90 10 L 90 90" stroke="rgba(255,215,0,0.03)" stroke-width="1.2"/></svg>');
+            opacity: 0.4;
+            pointer-events: none;
+            z-index: 0;
         }
 
-        /* 状态栏 + 底池 */
+        /* 主卡片 —— 桌面筹码区域，现在作为最外层容器 */
+        .poker-home {
+            background: rgba(10, 20, 10, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(200, 170, 100, 0.35);
+            border-radius: 48px;
+            box-shadow: 0 30px 50px rgba(0, 0, 0, 0.8), 0 0 0 2px #2f4b2f inset, 0 0 0 4px #b99b6b inset;
+            padding: 2.5rem 2.5rem 3rem 2.5rem;
+            max-width: 1400px;
+            width: 100%;
+            text-align: center;
+            z-index: 10;
+            position: relative;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .poker-home:hover {
+            box-shadow: 0 35px 60px rgba(0, 0, 0, 0.9), 0 0 0 2px #3e6b3e inset, 0 0 0 4px #e4c27e inset;
+        }
+
+        /* 标题区域 + 装饰 */
+        .welcome-message {
+            font-weight: 600;
+            font-size: 1.5rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: #cdba8d;
+            text-shadow: 0 2px 4px #00000050;
+            margin-bottom: 0.75rem;
+        }
+
+        .welcome-message i {
+            margin: 0 12px;
+            color: #cb9e5b;
+            font-size: 1.8rem;
+            vertical-align: middle;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #f7e9c3;
+            text-shadow: 4px 4px 0 #2b4a2b, 7px 7px 0 #00000030;
+            letter-spacing: 2px;
+            margin-top: 5px;
+            margin-bottom: 20px;
+            word-break: break-word;
+        }
+
+        /* 牌桌标语 / 牌局状态 */
+        .table-talk {
+            font-size: 1.25rem;
+            background: #1b2c1b;
+            border-radius: 60px;
+            padding: 10px 28px;
+            margin: 10px 0 25px 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+            border: 1px solid #7f6b42;
+            box-shadow: inset 0 1px 4px #a58b55, 0 8px 0 #0a1f0a;
+            color: #ffefcf;
+            font-weight: 500;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .table-talk i {
+            font-size: 1.9rem;
+            color: #f3c26b;
+        }
+
+        /* 状态栏 + 底池 - 融入牌桌 */
         .info-bar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding: 0 20px;
+            margin: 20px 0 25px;
+            padding: 0 10px;
+            flex-wrap: wrap;
+            gap: 15px;
         }
 
         .game-state-badge {
@@ -91,7 +157,7 @@
             filter: drop-shadow(0 2px 2px gold);
         }
 
-        /* 公共牌区 (更宽裕) */
+        /* 公共牌区 */
         .board-cards {
             display: flex;
             justify-content: center;
@@ -118,7 +184,7 @@
             backdrop-filter: blur(2px);
         }
 
-        /* 真正的卡片样式 —— 精致浮雕 */
+        /* 卡片样式 —— 奢华浮雕 */
         .card {
             width: 90px;
             height: 126px;
@@ -167,13 +233,13 @@
             color: #333;
         }
 
-        /* 玩家行 (使用更现代的弹性布局) */
+        /* 玩家区域 */
         .players-row {
             display: flex;
             justify-content: center;
             gap: 30px;
             flex-wrap: wrap;
-            margin: 30px 0 30px;
+            margin: 30px 0;
         }
 
         .player-spot {
@@ -217,7 +283,7 @@
             display: flex;
             justify-content: center;
             gap: 15px;
-            margin: 18px 0 18px;
+            margin: 18px 0;
         }
 
         .hole-card {
@@ -255,7 +321,7 @@
             box-shadow: inset 0 2px 5px #00000050;
         }
 
-        /* 操作面板 —— 华丽且富有质感 */
+        /* 操作面板 —— 华丽筹码风格按钮 */
         .action-panel {
             background: #1f4a32;
             background: linear-gradient(145deg, #235f3e, #133d26);
@@ -268,7 +334,7 @@
             align-items: center;
             justify-content: center;
             gap: 20px 30px;
-            margin-top: 25px;
+            margin: 25px 0 15px;
         }
 
         .action-btn {
@@ -332,12 +398,12 @@
             border-left: 4px solid #fccf7c;
         }
 
-        /* 日志区域 (复古终端风格) */
+        /* 日志区域 (复古终端风格，但融入整体) */
         .log-area {
             background: #0b1d15;
             border-radius: 30px;
             padding: 16px 22px;
-            margin-top: 28px;
+            margin: 25px 0 20px;
             color: #b9f1b9;
             font-family: 'JetBrains Mono', 'Fira Code', monospace;
             font-size: 0.95rem;
@@ -346,6 +412,7 @@
             max-height: 130px;
             overflow-y: auto;
             scroll-behavior: smooth;
+            text-align: left;
         }
 
         .log-area div {
@@ -353,76 +420,151 @@
             border-bottom: 1px dotted #577a5a;
         }
 
-        /* 小型调试工具 (非必须，保留但美化) */
+        /* 调试工具按钮，小尺寸融入 */
         .debug-tools {
             display: flex;
             justify-content: flex-end;
             gap: 12px;
-            margin-top: 20px;
+            margin-top: 15px;
         }
         .debug-btn {
             background: #3f6350;
             border: none;
             color: #f2eac2;
-            padding: 10px 20px;
+            padding: 8px 18px;
             border-radius: 40px;
             font-weight: 600;
             border-bottom: 5px solid #1b392b;
             cursor: pointer;
             transition: 0.07s;
             box-shadow: 0 3px 8px black;
+            font-size: 0.9rem;
         }
         .debug-btn:active {
             border-bottom-width: 2px;
             transform: translateY(3px);
         }
 
-        /* 适配移动端 */
+        /* 花色装饰 */
+        .suit-decor {
+            display: flex;
+            justify-content: center;
+            gap: 28px;
+            margin: 25px 0 10px;
+            font-size: 2.2rem;
+            color: #cab27e;
+            opacity: 0.8;
+        }
+
+        .suit-decor span {
+            transition: all 0.2s;
+            filter: drop-shadow(2px 4px 4px black);
+        }
+
+        .suit-decor span:hover {
+            transform: scale(1.2);
+            color: #f5d79c;
+        }
+
+        hr {
+            border: none;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #b1975a, transparent);
+            margin: 20px 0;
+        }
+
+        .blink-chip {
+            animation: soft-blink 2.4s infinite;
+        }
+        @keyframes soft-blink {
+            0% { opacity: 0.9; text-shadow: 0 0 3px #ffd27f; }
+            50% { opacity: 1; text-shadow: 0 0 10px #ffc657, 0 0 20px #b37b2e; }
+            100% { opacity: 0.9; text-shadow: 0 0 3px #ffd27f; }
+        }
+
+        .footnote {
+            margin-top: 15px;
+            font-size: 0.8rem;
+            color: #685f44;
+        }
+
         @media (max-width: 700px) {
-            .poker-table { padding: 15px; }
+            .poker-home { padding: 1.5rem; }
+            h1 { font-size: 2.2rem; }
             .action-btn { padding: 12px 20px; font-size: 1.5rem; }
             .pot-chip { font-size: 1.4rem; }
         }
     </style>
 </head>
 <body>
-<div class="poker-table">
-    <div class="felt">
-        <!-- 状态栏+底池 -->
-        <div class="info-bar">
-            <span class="game-state-badge" id="gameStateLabel">PRE-FLOP</span>
-            <div class="pot-chip" id="potDisplay">0</div>
-        </div>
+<div class="poker-home">
+    <div class="welcome-message">
+        <i class="fas fa-club"></i>  WELCOME TO THE FELT  <i class="fas fa-spade"></i>
+    </div>
 
-        <!-- 公共牌区 (5张) -->
-        <div class="board-cards" id="communityCardsContainer">
-            <div class="card-slot">?</div>
-            <div class="card-slot">?</div>
-            <div class="card-slot">?</div>
-            <div class="card-slot">?</div>
-            <div class="card-slot">?</div>
-        </div>
+    <h1>
+        <span class="blink-chip">♦</span> TEXAS HOLD'EM <span class="blink-chip">♠</span>
+    </h1>
 
-        <!-- 玩家区域 2人固定 (但可容纳更多) -->
-        <div class="players-row" id="playersArea"></div>
+    <div class="table-talk">
+        <i class="fas fa-crown"></i>
+        <span>🎴 多轮次游戏竞技 🎴</span>
+        <i class="fas fa-coins"></i>
+    </div>
 
-        <!-- 决策面板 -->
-        <div class="action-panel" id="actionPanel">
-            <button class="action-btn" id="callBtn" disabled>📞 CALL</button>
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <button class="action-btn" id="raiseBtn" disabled>📈 RAISE</button>
-                <input type="number" id="raiseAmount" class="raise-input" value="2" min="1" max="200" step="1" disabled>
-            </div>
-            <button class="action-btn" id="foldBtn" disabled>🏳️ FOLD</button>
-            <span class="hint-text" id="decisionHint">等待开局…</span>
-        </div>
+    <!-- 状态栏+底池 -->
+    <div class="info-bar">
+        <span class="game-state-badge" id="gameStateLabel">PRE-FLOP</span>
+        <div class="pot-chip" id="potDisplay">0</div>
+    </div>
 
-        <!-- 日志输出 -->
-        <div class="log-area" id="logPanel">
-            [系统]  ♠ 欢迎来到德州扑克终端 ♥
+    <!-- 公共牌区 -->
+    <div class="board-cards" id="communityCardsContainer">
+        <div class="card-slot">?</div>
+        <div class="card-slot">?</div>
+        <div class="card-slot">?</div>
+        <div class="card-slot">?</div>
+        <div class="card-slot">?</div>
+    </div>
+
+    <!-- 玩家区域 -->
+    <div class="players-row" id="playersArea"></div>
+
+    <!-- 决策面板 -->
+    <div class="action-panel" id="actionPanel">
+        <button class="action-btn" id="callBtn" disabled>📞 CALL</button>
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <button class="action-btn" id="raiseBtn" disabled>📈 RAISE</button>
+            <input type="number" id="raiseAmount" class="raise-input" value="2" min="1" max="200" step="1" disabled>
         </div>
-        
-        <!-- 小巧的调试按钮 (可选) -->
+        <button class="action-btn" id="foldBtn" disabled>🏳️ FOLD</button>
+        <span class="hint-text" id="decisionHint">等待开局…</span>
+    </div>
+
+    <!-- 日志输出 -->
+    <div class="log-area" id="logPanel">
+        [系统]  ♠ 欢迎来到德州扑克终端 ♥
+    </div>
+
+    <!-- 花色装饰 致敬扑克起源 -->
+    <div class="suit-decor">
+        <span>♠</span>
+        <span style="color: #d44b4b;">♥</span>
+        <span>♣</span>
+        <span style="color: #d44b4b;">♦</span>
+        <span>♠</span>
+        <span style="color: #d44b4b;">♥</span>
+        <span>♣</span>
+        <span style="color: #d44b4b;">♦</span>
+    </div>
+
+    <hr />
+
+    <!-- 小巧的调试按钮和免责声明 -->
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+        <div class="footnote">
+            <i class="fas fa-shield-alt"></i> 仅供玩法实现，请勿涉及任何金钱交易
+        </div>
         <div class="debug-tools">
             <button class="debug-btn" id="debugConnect">🔌 重连</button>
             <button class="debug-btn" id="debugDisconnect">⛔ 断开</button>
@@ -432,7 +574,7 @@
 
 <script>
     (function() {
-        // ---------- 状态管理 ----------
+        // ---------- 状态管理 (完全保留原功能) ----------
         let socket = null;
         const token = '[[${jwtToken}]]';   // 保留原占位符
 
@@ -474,24 +616,21 @@
             highlightDecisionMaker();
         }
 
-        // 渲染玩家 (2个，但可支持更多)
+        // 渲染玩家
         function renderPlayers() {
             const playersArea = document.getElementById('playersArea');
             playersArea.innerHTML = '';
 
-            // 如果玩家列表为空，用占位
             let displayPlayers = state.players.length ? state.players : [
                 { playerId: null, chipsInHand: 0, chipsInvested: 0, isContinuingGame: false, pokerCard: [null, null] },
                 { playerId: null, chipsInHand: 0, chipsInvested: 0, isContinuingGame: false, pokerCard: [null, null] }
             ];
 
-            // 保证至少2个占位
             while (displayPlayers.length < 2) {
                 displayPlayers.push({ playerId: null, chipsInHand: 0, chipsInvested: 0, isContinuingGame: false, pokerCard: [null, null] });
             }
 
             displayPlayers.forEach((player, index) => {
-                // 判断是否是我，来展示手牌
                 let card0 = null, card1 = null;
                 if (state.myPlayerId && state.myPlayerId.toString() === (index + 1).toString()) {
                     card0 = state.myHoleCards[0];
@@ -556,12 +695,11 @@
 
         function renderMisc() {
             document.getElementById('gameStateLabel').innerText = state.gameState || '—';
-            document.getElementById('potDisplay').innerHTML = `${state.pot}`; 
+            document.getElementById('potDisplay').innerHTML = `${state.pot}`;
         }
 
         function highlightDecisionMaker() {
             const hintEl = document.getElementById('decisionHint');
-            // 移除所有高亮
             document.querySelectorAll('.player-spot').forEach(el => el.classList.remove('active-turn'));
 
             if (state.currentDecisionMakerId && state.currentDecisionMakerId > 0 && state.players.length > 0) {
@@ -698,7 +836,6 @@
         // 初始化
         window.addEventListener('DOMContentLoaded', () => {
             bindActions();
-            // 重置/占位
             state.players = [
                 { playerId: null, chipsInHand: 0, chipsInvested: 0, isContinuingGame: false, pokerCard: [null, null] },
                 { playerId: null, chipsInHand: 0, chipsInvested: 0, isContinuingGame: false, pokerCard: [null, null] }
@@ -710,7 +847,6 @@
 
         window.addEventListener('beforeunload', disconnect);
 
-        // 暴露调试
         window.debug = { connect, disconnect, state };
     })();
 </script>

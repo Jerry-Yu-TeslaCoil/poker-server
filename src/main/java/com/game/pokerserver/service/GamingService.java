@@ -17,8 +17,8 @@ public class GamingService {
     private final Object lock = new Object();
 
     public int play(WebGamePlayer player) {
-        int playerId = playerCount + 1;
         synchronized (lock) {
+            int playerId = playerCount + 1;
             playerCount++;
             cardTable.playerJoin(player);
             log.info("Player {} joined the game", player);
@@ -30,7 +30,7 @@ public class GamingService {
                 new Thread(currentTable::startRounds).start();
                 cardTable = new ClassicTable();
             }
+            return playerId;
         }
-        return playerId;
     }
 }
